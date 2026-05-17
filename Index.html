@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OBANAI Diamond Shop</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #020b18; color: #fff; min-height: 100vh; overflow-x: hidden; }
+
+  /* BG circles */
+  .bg-circle1 { position: fixed; top: -60px; right: -60px; width: 200px; height: 200px; background: rgba(0,180,255,0.08); border-radius: 50%; pointer-events: none; }
+  .bg-circle2 { position: fixed; bottom: 100px; left: -80px; width: 250px; height: 250px; background: rgba(0,100,200,0.06); border-radius: 50%; pointer-events: none; }
+
+  /* LANG SCREEN */
+  .lang-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+  .lang-logo { font-size: 56px; margin-bottom: 16px; }
+  .lang-title { font-size: 22px; font-weight: 600; color: #00c8ff; margin-bottom: 6px; }
+  .lang-sub { font-size: 13px; color: #4a9abb; margin-bottom: 40px; }
+  .lang-btn { width: 100%; max-width: 300px; background: rgba(0,200,255,0.08); border: 1px solid rgba(0,200,255,0.25); border-radius: 14px; padding: 16px; margin-bottom: 12px; font-size: 16px; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.2s; }
+  .lang-btn:hover { background: rgba(0,200,255,0.15); border-color: rgba(0,200,255,0.5); }
+  .lang-flag { font-size: 24px; }
+  .lang-name { font-size: 15px; font-weight: 500; }
+
+  /* MAIN APP */
+  .app { display: none; padding-bottom: 80px; }
+  .header { background: rgba(0,200,255,0.05); border-bottom: 1px solid rgba(0,200,255,0.15); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px); }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .header-logo { width: 36px; height: 36px; background: rgba(0,200,255,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .header-title { font-size: 15px; font-weight: 600; color: #00c8ff; }
+  .header-sub { font-size: 11px; color: #4a9abb; }
+  .lang-switch { background: rgba(0,200,255,0.1); border: 1px solid rgba(0,200,255,0.2); border-radius: 8px; padding: 6px 10px; font-size: 12px; color: #00c8ff; cursor: pointer; }
+
+  /* PAGES */
+  .page { display: none; padding: 16px 20px; }
+  .page.active { display: block; }
+
+  /* BOTTOM NAV */
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(2,11,24,0.95); border-top: 1px solid rgba(0,200,255,0.15); display: flex; backdrop-filter: blur(10px); z-index: 20; }
+  .nav-item { flex: 1; padding: 10px 0; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; color: #4a9abb; transition: color 0.2s; }
+  .nav-item.active { color: #00c8ff; }
+  .nav-icon { font-size: 20px; }
+  .nav-label { font-size: 10px; }
+
+  /* SECTION TITLE */
+  .section-title { font-size: 12px; color: #4a9abb; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; margin: 16px 0 10px; }
+
+  /* PACKAGE CARD */
+  .pkg-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(0,200,255,0.15); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.2s; }
+  .pkg-card:hover, .pkg-card.selected { background: rgba(0,200,255,0.1); border-color: rgba(0,200,255,0.4); }
+  .pkg-icon { width: 44px; height: 44px; background: rgba(0,200,255,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .pkg-info { flex: 1; }
+  .pkg-name { font-size: 14px; font-weight: 500; color: #e0f4ff; }
+  .pkg-desc { font-size: 11px; color: #4a9abb; margin-top: 2px; }
+  .pkg-price { font-size: 13px; font-weight: 600; color: #00c8ff; text-align: right; }
+  .pkg-arrow { color: #00c8ff; font-size: 18px; }
+
+  /* ORDER FORM */
+  .form-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(0,200,255,0.15); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  .form-label { font-size: 12px; color: #4a9abb; margin-bottom: 8px; display: block; }
+  .form-input { width: 100%; background: rgba(0,200,255,0.06); border: 1px solid rgba(0,200,255,0.2); border-radius: 10px; padding: 12px 14px; font-size: 14px; color: #fff; outline: none; transition: border 0.2s; }
+  .form-input:focus { border-color: rgba(0,200,255,0.5); }
+  .form-input::placeholder { color: #4a9abb; }
+  .form-hint { font-size: 11px; color: #4a9abb; margin-top: 6px; }
+
+  /* PAYMENT METHODS */
+  .pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pay-btn { background: rgba(255,255,255,0.04); border: 1px solid rgba(0,200,255,0.15); border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; transition: all 0.2s; }
+  .pay-btn:hover, .pay-btn.selected { background: rgba(0,200,255,0.1); border-color: rgba(0,200,255,0.4); }
+  .pay-emoji { font-size: 22px; margin-bottom: 4px; }
+  .pay-name { font-size: 11px; color: #e0f4ff; font-weight: 500; }
+
+  /* ORDER SUMMARY */
+  .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,200,255,0.1); }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-key { font-size: 13px; color: #4a9abb; }
+  .summary-val { font-size: 13px; color: #e0f4ff; font-weight: 500; }
+
+  /* SUBMIT BTN */
+  .submit-btn { width: 100%; background: #00c8ff; border: none; border-radius: 14px; padding: 16px; font-size: 15px; font-weight: 600; color: #000; cursor: pointer; margin-top: 16px; transition: opacity 0.2s; }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .submit-btn:hover:not(:disabled) { opacity: 0.9; }
+
+  /* SUCCESS */
+  .success-screen { text-align: center; padding: 40px 20px; }
+  .success-icon { font-size: 64px; margin-bottom: 16px; }
+  .success-title { font-size: 20px; font-weight: 600; color: #00c8ff; margin-bottom: 8px; }
+  .success-sub { font-size: 14px; color: #4a9abb; line-height: 1.6; }
+
+  /* INFO PAGE */
+  .info-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(0,200,255,0.15); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+  .info-title { font-size: 14px; font-weight: 500; color: #00c8ff; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .info-text { font-size: 13px; color: #4a9abb; line-height: 1.6; }
+
+  .badge { display: inline-block; background: rgba(0,200,255,0.15); border: 1px solid rgba(0,200,255,0.3); border-radius: 20px; padding: 4px 12px; font-size: 11px; color: #00c8ff; margin-bottom: 12px; }
+
+  .step-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start; }
+  .step-num { width: 24px; height: 24px; background: rgba(0,200,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #00c8ff; font-weight: 600; flex-shrink: 0; }
+  .step-text { font-size: 13px; color: #4a9abb; padding-top: 3px; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div class="bg-circle1"></div>
+<div class="bg-circle2"></div>
+
+<!-- LANG SELECT -->
+<div class="lang-screen" id="langScreen">
+  <div class="lang-logo">💎</div>
+  <div class="lang-title">OBANAI DIAMOND</div>
+  <div class="lang-sub">MLBB Premium Top-up</div>
+  <button class="lang-btn" onclick="setLang('uz')"><span class="lang-flag">🇺🇿</span><span class="lang-name">O'zbekcha</span></button>
+  <button class="lang-btn" onclick="setLang('ru')"><span class="lang-flag">🇷🇺</span><span class="lang-name">Русский</span></button>
+  <button class="lang-btn" onclick="setLang('en')"><span class="lang-flag">🇬🇧</span><span class="lang-name">English</span></button>
+</div>
+
+<!-- MAIN APP -->
+<div class="app" id="mainApp">
+  <div class="header">
+    <div class="header-left">
+      <div class="header-logo">💎</div>
+      <div>
+        <div class="header-title">OBANAI DIAMOND</div>
+        <div class="header-sub" id="headerSub">MLBB Top-up</div>
+      </div>
+    </div>
+    <button class="lang-switch" onclick="showLang()" id="langFlag">🇺🇿</button>
+  </div>
+
+  <!-- SHOP PAGE -->
+  <div class="page active" id="shopPage">
+    <div class="badge" id="shopBadge">⚡ Tezkor yetkazish</div>
+    <div class="section-title" id="secDiamond">💎 DIAMOND PAKETLAR</div>
+    <div id="pkgList"></div>
+    <div class="section-title" id="secSpecial">⭐ MAXSUS PAKETLAR</div>
+    <div id="specialList"></div>
+  </div>
+
+  <!-- ORDER PAGE -->
+  <div class="page" id="orderPage">
+    <div class="section-title" id="secOrder">BUYURTMA</div>
+    <div class="form-card">
+      <label class="form-label" id="lblPkg">Tanlangan paket</label>
+      <div style="background:rgba(0,200,255,0.06);border:1px solid rgba(0,200,255,0.2);border-radius:10px;padding:12px 14px;font-size:14px;color:#00c8ff;font-weight:500;" id="selectedPkgShow">—</div>
+    </div>
+    <div class="form-card">
+      <label class="form-label" id="lblId">🎮 MLBB Player ID</label>
+      <input type="number" class="form-input" id="mlbbId" placeholder="123456789">
+      <div class="form-hint" id="hintId">O'yinda Profil → ID raqami</div>
+    </div>
+    <div class="form-card">
+      <label class="form-label" id="lblZone">🌍 Zone ID</label>
+      <input type="number" class="form-input" id="zoneId" placeholder="1234">
+      <div class="form-hint" id="hintZone">ID yonidagi qavs ichidagi raqam</div>
+    </div>
+    <div class="section-title" id="secPay">💳 TO'LOV USULI</div>
+    <div class="pay-grid" id="payMethods"></div>
+    <div class="form-card" id="orderSummary" style="margin-top:14px;display:none;">
+      <div class="summary-row"><span class="summary-key" id="sumPkg">Paket</span><span class="summary-val" id="sumPkgVal">—</span></div>
+      <div class="summary-row"><span class="summary-key" id="sumPrice">Narx</span><span class="summary-val" id="sumPriceVal">—</span></div>
+      <div class="summary-row"><span class="summary-key" id="sumPay">To'lov</span><span class="summary-val" id="sumPayVal">—</span></div>
+    </div>
+    <button class="submit-btn" id="submitBtn" onclick="submitOrder()" disabled>—</button>
+  </div>
+
+  <!-- INFO PAGE -->
+  <div class="page" id="infoPage">
+    <div class="info-card">
+      <div class="info-title">💎 <span id="infoTitle">Biz haqimizda</span></div>
+      <div class="info-text" id="infoAbout">OBANAI DIAMOND SHOP — O'zbekistondagi eng tezkor va ishonchli MLBB diamond top-up xizmati.</div>
+    </div>
+    <div class="info-card">
+      <div class="info-title">📋 <span id="infoHowTitle">Qanday ishlaydi?</span></div>
+      <div id="infoSteps"></div>
+    </div>
+    <div class="info-card">
+      <div class="info-title">💳 <span id="infoPayTitle">To'lov usullari</span></div>
+      <div class="info-text">Click · Payme · Uzcard · Visa · Humo</div>
+    </div>
+    <div class="info-card">
+      <div class="info-title">📞 <span id="infoContact">Aloqa</span></div>
+      <div class="info-text">@your_admin_username</div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="showPage('shop')" id="nav-shop">
+      <div class="nav-icon">💎</div>
+      <div class="nav-label" id="navShop">Shop</div>
+    </div>
+    <div class="nav-item" onclick="showPage('order')" id="nav-order">
+      <div class="nav-icon">🛒</div>
+      <div class="nav-label" id="navOrder">Buyurtma</div>
+    </div>
+    <div class="nav-item" onclick="showPage('info')" id="nav-info">
+      <div class="nav-icon">ℹ️</div>
+      <div class="nav-label" id="navInfo">Ma'lumot</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PACKAGES = [
+  {id:1, name:"11 💎", diamonds:11, price:9000, type:"diamond"},
+  {id:2, name:"22 💎", diamonds:22, price:17000, type:"diamond"},
+  {id:3, name:"56 💎", diamonds:56, price:38000, type:"diamond"},
+  {id:4, name:"112 💎", diamonds:112, price:72000, type:"diamond"},
+  {id:5, name:"195 💎", diamonds:195, price:120000, type:"diamond"},
+  {id:6, name:"302 💎", diamonds:302, price:185000, type:"diamond"},
+  {id:7, name:"570 💎", diamonds:570, price:340000, type:"diamond"},
+  {id:8, name:"875 💎", diamonds:875, price:520000, type:"diamond"},
+  {id:9, name:"1195 💎", diamonds:1195, price:700000, type:"diamond"},
+  {id:10, name:"1788 💎", diamonds:1788, price:1050000, type:"diamond"},
+  {id:11, name:"2195 💎", diamonds:2195, price:1280000, type:"diamond"},
+  {id:12, name:"3688 💎", diamonds:3688, price:2150000, type:"diamond"},
+  {id:13, name:"5532 💎", diamonds:5532, price:3200000, type:"diamond"},
+  {id:14, name:"Weekly Pass 🎫", diamonds:220, price:28000, type:"special"},
+  {id:15, name:"Starlight ⭐", diamonds:0, price:155000, type:"special"},
+];
+
+const PAYMENTS = [
+  {id:"click", name:"Click", emoji:"💳"},
+  {id:"payme", name:"Payme", emoji:"💚"},
+  {id:"uzcard", name:"Uzcard", emoji:"🟢"},
+  {id:"visa", name:"Visa", emoji:"💜"},
+  {id:"humo", name:"Humo", emoji:"🟠"},
+];
+
+const LANGS = {
+  uz: {
+    headerSub:"MLBB Top-up", shopBadge:"⚡ Tezkor yetkazish",
+    secDiamond:"💎 DIAMOND PAKETLAR", secSpecial:"⭐ MAXSUS PAKETLAR",
+    secOrder:"BUYURTMA", lblPkg:"Tanlangan paket", lblId:"🎮 MLBB Player ID",
+    hintId:"O'yinda Profil → ID raqami", lblZone:"🌍 Zone ID",
+    hintZone:"ID yonidagi qavs ichidagi raqam", secPay:"💳 TO'LOV USULI",
+    sumPkg:"Paket", sumPrice:"Narx", sumPay:"To'lov usuli",
+    submitBtn:"✅ Buyurtma berish", navShop:"Shop", navOrder:"Buyurtma", navInfo:"Ma'lumot",
+    infoTitle:"Biz haqimizda", infoAbout:"OBANAI DIAMOND SHOP — O'zbekistondagi eng tezkor va ishonchli MLBB diamond top-up xizmati.",
+    infoHowTitle:"Qanday ishlaydi?", infoPayTitle:"To'lov usullari", infoContact:"Aloqa",
+    steps:["Paket tanlang","MLBB ID va Zone ID kiriting","To'lov usulini tanlang","Buyurtma bering — tez yetkazamiz!"],
+    selectFirst:"Avval paket tanlang", flag:"🇺🇿", priceUnit:"so'm"
+  },
+  ru: {
+    headerSub:"MLBB Пополнение", shopBadge:"⚡ Быстрая доставка",
+    secDiamond:"💎 ПАКЕТЫ АЛМАЗОВ", secSpecial:"⭐ СПЕЦПАКЕТЫ",
+    secOrder:"ЗАКАЗ", lblPkg:"Выбранный пакет", lblId:"🎮 ID игрока MLBB",
+    hintId:"В игре: Профиль → ID", lblZone:"🌍 Zone ID",
+    hintZone:"Цифры в скобках рядом с ID", secPay:"💳 СПОСОБ ОПЛАТЫ",
+    sumPkg:"Пакет", sumPrice:"Цена", sumPay:"Оплата",
+    submitBtn:"✅ Оформить заказ", navShop:"Магазин", navOrder:"Заказ", navInfo:"Инфо",
+    infoTitle:"О нас", infoAbout:"OBANAI DIAMOND SHOP — самый быстрый сервис пополнения алмазов MLBB в Узбекистане.",
+    infoHowTitle:"Как это работает?", infoPayTitle:"Способы оплаты", infoContact:"Контакт",
+    steps:["Выберите пакет","Введите MLBB ID и Zone ID","Выберите способ оплаты","Оформите заказ — доставим быстро!"],
+    selectFirst:"Сначала выберите пакет", flag:"🇷🇺", priceUnit:"сум"
+  },
+  en: {
+    headerSub:"MLBB Top-up", shopBadge:"⚡ Fast delivery",
+    secDiamond:"💎 DIAMOND PACKAGES", secSpecial:"⭐ SPECIAL PACKAGES",
+    secOrder:"ORDER", lblPkg:"Selected package", lblId:"🎮 MLBB Player ID",
+    hintId:"In game: Profile → ID number", lblZone:"🌍 Zone ID",
+    hintZone:"Numbers in brackets next to ID", secPay:"💳 PAYMENT METHOD",
+    sumPkg:"Package", sumPrice:"Price", sumPay:"Payment",
+    submitBtn:"✅ Place Order", navShop:"Shop", navOrder:"Order", navInfo:"Info",
+    infoTitle:"About us", infoAbout:"OBANAI DIAMOND SHOP — the fastest and most reliable MLBB diamond top-up service in Uzbekistan.",
+    infoHowTitle:"How it works?", infoPayTitle:"Payment methods", infoContact:"Contact",
+    steps:["Select a package","Enter MLBB ID and Zone ID","Choose payment method","Place order — we deliver fast!"],
+    selectFirst:"Select a package first", flag:"🇬🇧", priceUnit:"sum"
+  }
+};
+
+let currentLang = "uz";
+let selectedPkg = null;
+let selectedPay = null;
+
+function setLang(lang) {
+  currentLang = lang;
+  document.getElementById("langScreen").style.display = "none";
+  document.getElementById("mainApp").style.display = "block";
+  applyLang();
+  renderPackages();
+  renderPayments();
+  renderInfo();
+}
+
+function showLang() {
+  document.getElementById("langScreen").style.display = "flex";
+  document.getElementById("mainApp").style.display = "none";
+}
+
+function applyLang() {
+  const L = LANGS[currentLang];
+  document.getElementById("headerSub").textContent = L.headerSub;
+  document.getElementById("shopBadge").textContent = L.shopBadge;
+  document.getElementById("secDiamond").textContent = L.secDiamond;
+  document.getElementById("secSpecial").textContent = L.secSpecial;
+  document.getElementById("secOrder").textContent = L.secOrder;
+  document.getElementById("lblPkg").textContent = L.lblPkg;
+  document.getElementById("lblId").textContent = L.lblId;
+  document.getElementById("hintId").textContent = L.hintId;
+  document.getElementById("lblZone").textContent = L.lblZone;
+  document.getElementById("hintZone").textContent = L.hintZone;
+  document.getElementById("secPay").textContent = L.secPay;
+  document.getElementById("sumPkg").textContent = L.sumPkg;
+  document.getElementById("sumPrice").textContent = L.sumPrice;
+  document.getElementById("sumPay").textContent = L.sumPay;
+  document.getElementById("navShop").textContent = L.navShop;
+  document.getElementById("navOrder").textContent = L.navOrder;
+  document.getElementById("navInfo").textContent = L.navInfo;
+  document.getElementById("langFlag").textContent = L.flag;
+  if (!selectedPkg) document.getElementById("submitBtn").textContent = L.selectFirst;
+  else document.getElementById("submitBtn").textContent = L.submitBtn;
+}
+
+function fmtPrice(p) {
+  return p.toLocaleString() + " " + LANGS[currentLang].priceUnit;
+}
+
+function renderPackages() {
+  const diamonds = PACKAGES.filter(p => p.type === "diamond");
+  const special = PACKAGES.filter(p => p.type === "special");
+  document.getElementById("pkgList").innerHTML = diamonds.map(p => pkgCard(p)).join("");
+  document.getElementById("specialList").innerHTML = special.map(p => pkgCard(p)).join("");
+}
+
+function pkgCard(p) {
+  const icon = p.type === "special" ? (p.id === 14 ? "🎫" : "⭐") : "💎";
+  return `<div class="pkg-card ${selectedPkg && selectedPkg.id === p.id ? 'selected' : ''}" onclick="selectPkg(${p.id})">
+    <div class="pkg-icon">${icon}</div>
+    <div class="pkg-info">
+      <div class="pkg-name">${p.name}</div>
+      <div class="pkg-desc">${p.diamonds > 0 ? p.diamonds + " diamonds" : "Monthly"}</div>
+    </div>
+    <div class="pkg-price">${fmtPrice(p.price)}</div>
+  </div>`;
+}
+
+function selectPkg(id) {
+  selectedPkg = PACKAGES.find(p => p.id === id);
+  renderPackages();
+  document.getElementById("selectedPkgShow").textContent = selectedPkg.name + " — " + fmtPrice(selectedPkg.price);
+  document.getElementById("sumPkgVal").textContent = selectedPkg.name;
+  document.getElementById("sumPriceVal").textContent = fmtPrice(selectedPkg.price);
+  updateSubmit();
+  showPage("order");
+}
+
+function renderPayments() {
+  document.getElementById("payMethods").innerHTML = PAYMENTS.map(p =>
+    `<div class="pay-btn ${selectedPay === p.id ? 'selected' : ''}" onclick="selectPay('${p.id}')">
+      <div class="pay-emoji">${p.emoji}</div>
+      <div class="pay-name">${p.name}</div>
+    </div>`
+  ).join("");
+}
+
+function selectPay(id) {
+  selectedPay = id;
+  const pay = PAYMENTS.find(p => p.id === id);
+  document.getElementById("sumPayVal").textContent = pay.emoji + " " + pay.name;
+  document.getElementById("orderSummary").style.display = "block";
+  renderPayments();
+  updateSubmit();
+}
+
+function updateSubmit() {
+  const L = LANGS[currentLang];
+  const btn = document.getElementById("submitBtn");
+  const mlbbId = document.getElementById("mlbbId").value;
+  const zoneId = document.getElementById("zoneId").value;
+  if (selectedPkg && selectedPay && mlbbId && zoneId) {
+    btn.disabled = false;
+    btn.textContent = L.submitBtn;
+  } else if (!selectedPkg) {
+    btn.disabled = true;
+    btn.textContent = L.selectFirst;
+  } else {
+    btn.disabled = true;
+    btn.textContent = L.submitBtn;
+  }
+}
+
+document.addEventListener("input", updateSubmit);
+
+function renderInfo() {
+  const L = LANGS[currentLang];
+  document.getElementById("infoTitle").textContent = L.infoTitle;
+  document.getElementById("infoAbout").textContent = L.infoAbout;
+  document.getElementById("infoHowTitle").textContent = L.infoHowTitle;
+  document.getElementById("infoPayTitle").textContent = L.infoPayTitle;
+  document.getElementById("infoContact").textContent = L.infoContact;
+  document.getElementById("infoSteps").innerHTML = L.steps.map((s, i) =>
+    `<div class="step-row"><div class="step-num">${i+1}</div><div class="step-text">${s}</div></div>`
+  ).join("");
+}
+
+function showPage(page) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+  document.getElementById(page + "Page").classList.add("active");
+  document.getElementById("nav-" + page).classList.add("active");
+}
+
+function submitOrder() {
+  const mlbbId = document.getElementById("mlbbId").value;
+  const zoneId = document.getElementById("zoneId").value;
+  if (!selectedPkg || !selectedPay || !mlbbId || !zoneId) return;
+
+  if (window.Telegram && window.Telegram.WebApp) {
+    Telegram.WebApp.sendData(JSON.stringify({
+      pkg_id: selectedPkg.id,
+      pkg_name: selectedPkg.name,
+      price: selectedPkg.price,
+      mlbb_id: mlbbId,
+      zone_id: zoneId,
+      payment: selectedPay
+    }));
+  } else {
+    alert("Buyurtma yuborildi! Bot orqali to'liq ishlaydi.");
+  }
+}
+
+if (window.Telegram && window.Telegram.WebApp) {
+  Telegram.WebApp.ready();
+  Telegram.WebApp.expand();
+}
+</script>
+</body>
+</html>
